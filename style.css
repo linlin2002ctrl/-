@@ -1,0 +1,70 @@
+/* Google Font (Padauk) */
+@import url('https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap');
+
+/* Color Palette based on 60-30-10 Rule */
+:root {
+    --primary-color: #0d6efd; /* Blue: Trust, Stability (60%) */
+    --secondary-color: #f8f9fa; /* Light Gray: Background (30%) */
+    --accent-color-success: #198754; /* Green: Growth, Success (10%) */
+    --accent-color-danger: #dc3545; /* Red: Urgency, Warning */
+    --text-color-dark: #212529;
+    --text-color-light: #6c757d;
+    --card-bg: #ffffff;
+    --border-color: #dee2e6;
+}
+
+body {
+    font-family: 'Padauk', sans-serif;
+    background-color: var(--secondary-color);
+    color: var(--text-color-dark);
+}
+
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem; /* Softer corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-danger {
+    background-color: var(--accent-color-danger);
+    border-color: var(--accent-color-danger);
+}
+
+/* Dashboard Specific Styles */
+.card-metric .value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.card-metric .label {
+    font-size: 1rem;
+    color: var(--text-color-light);
+    font-weight: 400;
+}
+
+/* Touch-friendly adjustments for smaller screens */
+@media (max-width: 576px) {
+    .btn-lg {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    h1 {
+        font-size: 1.75rem;
+    }
+}
+
+tfoot { 
+    font-weight: bold; 
+    font-size: 1.1em; 
+}
+
+#total-amount { 
+    color: var(--accent-color-danger);
+}
