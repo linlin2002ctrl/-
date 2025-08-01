@@ -59,8 +59,26 @@ function renderSales() {
     const selectedMonth = monthFilter.value;
     const searchTerm = searchInput.value.toLowerCase();
 
-    // Filtering and Sorting logic (no change)
-    let filteredSales = allSales.filter(sale => { /* ... */ });
+    // =========================================================
+    //               THE BUG FIX IS HERE
+    // =========================================================
+    // 1. Filter by Month
+    let filteredSales = allSales.filter(sale => {
+        if (selectedMonth === 'all') {
+            return true;
+        }
+        return sale.date && sale.date.substring(0, 7) === selectedMonth;
+    });
+
+    // 2. Filter by Search Term
+    if (searchTerm) {
+        filteredSales = filteredSales.filter(sale => 
+            (sale.customer && sale.customer.toLowerCase().includes(searchTerm)) || 
+            (sale.product && sale.product.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    // Sorting Logic (No change needed here)
     // ...
 
     // Check for Empty State
@@ -75,11 +93,10 @@ function renderSales() {
     // --- Takumi: Robust Row Rendering ---
     salesList.innerHTML = '';
     filteredSales.forEach(sale => {
-        grandTotal += (sale.totalPrice || 0); // Defend against null totalPrice
+        grandTotal += (sale.totalPrice || 0);
         const row = document.createElement('tr');
-        row.dataset.customer = sale.customer || ''; // Defend against null customer
+        row.dataset.customer = sale.customer || '';
 
-        // Defensive checks for each piece of data before rendering
         const displayDate = sale.date || 'N/A';
         const displayCustomer = sale.customer || 'Unknown Customer';
         const displayProduct = sale.product || 'Unknown Product';
@@ -123,7 +140,7 @@ function addEventListeners() {
     document.querySelectorAll('#sales-list tr').forEach(row => {
         row.addEventListener('click', () => {
             const customerName = row.dataset.customer;
-            if (customerName) { // Only navigate if customer name exists
+            if (customerName) {
                 window.location.href = `customer-details.html?name=${encodeURIComponent(customerName)}`;
             }
         });
@@ -139,7 +156,7 @@ async function deleteSaleById(id) {
     }
 }
 
-// Event Listeners for search, sort, and filter (trimmed for brevity, no changes from previous version)
+// Event Listeners for search, sort, and filter
 searchInput.addEventListener('input', renderSales);
 monthFilter.addEventListener('change', renderSales);
 // ... sorting listeners ...
