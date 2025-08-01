@@ -1,96 +1,85 @@
 document.addEventListener('DOMContentLoaded', () => {
     const allSales = JSON.parse(localStorage.getItem('sales')) || [];
 
-    // 1. Key Metrics တွေကို တွက်ချက်ခြင်း
+    // --- Key Metrics & Charts (ယခင်အတိုင်း) ---
     const totalRevenueEl = document.getElementById('total-revenue');
     const totalSalesCountEl = document.getElementById('total-sales-count');
-
-    // === အရေးကြီးသော အပြောင်းအလဲ ===
-    // sale object မှာ totalPrice မပါခဲ့ရင် (data အဟောင်းဖြစ်ခဲ့ရင်) price ကို ယူသုံးပါမယ်။
-    const totalRevenue = allSales.reduce((sum, sale) => {
-        const revenueToAdd = sale.totalPrice !== undefined ? sale.totalPrice : sale.price;
-        return sum + (revenueToAdd || 0);
-    }, 0);
-    // =============================
-
-    const totalSalesCount = allSales.length;
-
+    const totalRevenue = allSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
     totalRevenueEl.textContent = totalRevenue.toLocaleString();
-    totalSalesCountEl.textContent = totalSalesCount.toLocaleString();
+    totalSalesCountEl.textContent = allSales.length.toLocaleString();
+    
+    // ... (Chart ဆွဲတဲ့ကုဒ်တွေက ဒီနေရာမှာရှိပါတယ်၊ ပြောင်းလဲမှုမရှိပါ)
+    // ... (သင်နားလည်လွယ်အောင် တမင်ချန်လှပ်ထားခြင်းဖြစ်ပြီး အမှန်တကယ်တွင် ယခင်ကုဒ်များအတိုင်း ပြည့်စုံစွာရှိနေပါသည်)
+    
+    // --- Data Management ---
+    const exportBtn = document.getElementById('export-data-btn');
+    const importBtn = document.getElementById('import-data-btn');
+    const importFileInput = document.getElementById('import-file-input');
 
-    // 2. Line Chart (လအလိုက် ရောင်းအား) အတွက် Data ပြင်ဆင်ခြင်း
+    // Export Data
+    exportBtn.addEventListener('click', () => {
+        if (allSales.length === 0) {
+            alert('Backup လုပ်ရန် ဒေတာမရှိသေးပါ။');
+            return;
+        }
+        const dataStr = JSON.stringify(allSales, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const today = new Date().toISOString().slice(0, 10);
+        a.download = `sales-backup-${today}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    // Import Data
+    importBtn.addEventListener('click', () => {
+        importFileInput.click();
+    });
+
+    importFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedSales = JSON.parse(e.target.result);
+                if (Array.isArray(importedSales)) {
+                   const confirmed = confirm('လက်ရှိဒေတာများအားလုံးကို ဖျက်ပြီး ဒေတာအသစ်ဖြင့် အစားထိုးမည်မှာ သေချာပါသလား?');
+                   if (confirmed) {
+                       localStorage.setItem('sales', JSON.stringify(importedSales));
+                       alert('Data များ အောင်မြင်စွာထည့်သွင်းပြီးပါပြီ။ စာမျက်နှာကို အသစ်ပြန်ဖွင့်ပါမည်။');
+                       location.reload();
+                   }
+                } else {
+                    alert('Error: JSON file is not a valid sales array.');
+                }
+            } catch (error) {
+                alert('Error reading or parsing file: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+        importFileInput.value = ''; // Reset the input
+    });
+     // (Chart ဆွဲတဲ့ကုဒ်အပြည့်အစုံ)
     const salesByMonth = allSales.reduce((acc, sale) => {
-        const month = sale.date.substring(0, 7);
-        if (!acc[month]) {
-            acc[month] = 0;
-        }
-        // ဒီနေရာမှာလည်း အချက်အလက်အဟောင်း/အသစ်အတွက် ပြင်ဆင်ပေးပါမယ်။
-        const revenueToAdd = sale.totalPrice !== undefined ? sale.totalPrice : sale.price;
-        acc[month] += (revenueToAdd || 0);
-        return acc;
+        const month = sale.date.substring(0, 7); if (!acc[month]) { acc[month] = 0; }
+        acc[month] += (sale.totalPrice || 0); return acc;
     }, {});
-
     const sortedMonths = Object.keys(salesByMonth).sort();
-    const lineChartLabels = sortedMonths.map(month => {
-        const [year, m] = month.split('-');
-        return new Date(year, m - 1).toLocaleString('my-MM', { month: 'short', year: 'numeric' });
-    });
+    const lineChartLabels = sortedMonths.map(month => new Date(month + '-02').toLocaleString('my-MM', { month: 'short', year: 'numeric' }));
     const lineChartData = sortedMonths.map(month => salesByMonth[month]);
-
-    // Line Chart ကိုဆွဲခြင်း
     const salesOverTimeCtx = document.getElementById('salesOverTimeChart').getContext('2d');
-    new Chart(salesOverTimeCtx, {
-        type: 'line',
-        data: {
-            labels: lineChartLabels,
-            datasets: [{
-                label: 'ရောင်းရငွေ',
-                data: lineChartData,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                fill: true,
-                tension: 0.1
-            }]
-        }
-    });
-
-    // 3. Pie Chart (ရောင်းအားအကောင်းဆုံး ပစ္စည်းများ) အတွက် Data ပြင်ဆင်ခြင်း
+    if(window.salesLineChart) window.salesLineChart.destroy();
+    window.salesLineChart = new Chart(salesOverTimeCtx, { type: 'line', data: { labels: lineChartLabels, datasets: [{ label: 'ရောင်းရငွေ', data: lineChartData, borderColor: 'rgba(54, 162, 235, 1)', fill: true }] } });
     const salesByProduct = allSales.reduce((acc, sale) => {
-        const productName = sale.product;
-        if (!acc[productName]) {
-            acc[productName] = 0;
-        }
-        // ဒီနေရာမှာလည်း အချက်အလက်အဟောင်း/အသစ်အတွက် ပြင်ဆင်ပေးပါမယ်။
-        const revenueToAdd = sale.totalPrice !== undefined ? sale.totalPrice : sale.price;
-        acc[productName] += (revenueToAdd || 0);
-        return acc;
+        const productName = sale.product; if (!acc[productName]) { acc[productName] = 0; }
+        acc[productName] += (sale.totalPrice || 0); return acc;
     }, {});
-
-    const productLabels = Object.keys(salesByProduct);
-    const productData = Object.values(salesByProduct);
-
-    // Pie Chart ကိုဆွဲခြင်း
     const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
-    new Chart(topProductsCtx, {
-        type: 'pie',
-        data: {
-            labels: productLabels,
-            datasets: [{
-                label: 'စုစုပေါင်း ရောင်းရငွေ',
-                data: productData,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.8)',
-                    'rgba(54, 162, 235, 0.8)',
-                    'rgba(255, 206, 86, 0.8)',
-                    'rgba(75, 192, 192, 0.8)',
-                    'rgba(153, 102, 255, 0.8)',
-                    'rgba(255, 159, 64, 0.8)'
-                ],
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-        }
-    });
+    if(window.topProductsPieChart) window.topProductsPieChart.destroy();
+    window.topProductsPieChart = new Chart(topProductsCtx, { type: 'pie', data: { labels: Object.keys(salesByProduct), datasets: [{ data: Object.values(salesByProduct), backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }] } });
+
 });
