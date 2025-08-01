@@ -2,17 +2,15 @@ import { supabase } from './supabase-client.js';
 
 // --- Main function to run after the page is fully loaded ---
 async function main() {
-    const logoutBtn = document.getElementById('logout-btn');
-
-    // 1. Check if user is logged in
+    // 1. Check user login status
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         window.location.href = '/auth.html';
         return; 
     }
 
-    // 2. Set up the logout button
-    logoutBtn.addEventListener('click', async () => {
+    // 2. Set up event listeners
+    document.getElementById('logout-btn').addEventListener('click', async () => {
         await supabase.auth.signOut();
         window.location.href = '/auth.html';
     });
@@ -30,12 +28,36 @@ async function loadDashboardData() {
         return;
     }
 
-    // --- Update Stat Cards UI ---
     updateStatCards(allSales);
 
-    // --- Draw Charts ---
-    // We will only draw the Line Chart for now to isolate the problem.
-    drawSalesOverTimeChart(allSales);
+    // --- The Rosetta Stone Method Implementation ---
+    const monthlySalesData = calculateMonthlySales(allSales);
+    
+    // 1. Display simple summary table by default
+    displayMonthlySummaryTable(monthlySalesData);
+
+    // 2. Set up the toggle button to show/hide the chart
+    const toggleBtn = document.getElementById('toggle-chart-btn');
+    const chartContainer = document.getElementById('chart-container');
+    const summaryTable = document.getElementById('monthly-summary-table');
+    let isChartVisible = false;
+
+    toggleBtn.addEventListener('click', () => {
+        isChartVisible = !isChartVisible;
+        if (isChartVisible) {
+            summaryTable.style.display = 'none';
+            chartContainer.style.display = 'block';
+            toggleBtn.textContent = 'ဇယားဖြင့်ကြည့်ရန်';
+            // Draw chart only when it's requested for the first time
+            if (!window.salesLineChart) {
+                drawSalesOverTimeChart(monthlySalesData);
+            }
+        } else {
+            summaryTable.style.display = 'block';
+            chartContainer.style.display = 'none';
+            toggleBtn.textContent = 'Chart ဖြင့်ကြည့်ရန်';
+        }
+    });
 }
 
 function updateStatCards(salesData) {
@@ -54,59 +76,70 @@ function updateStatCards(salesData) {
     document.getElementById('sales-this-month').textContent = salesThisMonthValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-function drawSalesOverTimeChart(salesData) {
+function calculateMonthlySales(salesData) {
+    const salesByMonth = salesData.reduce((acc, sale) => {
+        if (sale.date) {
+            const month = sale.date.substring(0, 7);
+            if (!acc[month]) acc[month] = 0;
+            acc[month] += (sale.totalPrice || 0);
+        }
+        return acc;
+    }, {});
+    return Object.entries(salesByMonth).sort().reverse(); // Sort by month, descending
+}
+
+function displayMonthlySummaryTable(monthlySalesData) {
+    const tableContainer = document.getElementById('monthly-summary-table');
+    if (monthlySalesData.length === 0) {
+        tableContainer.innerHTML = `<p class="text-muted text-center">လအလိုက် ရောင်းအားမှတ်တမ်း မရှိသေးပါ။</p>`;
+        return;
+    }
+    
+    let tableHTML = `<table class="table table-sm"><tbody>`;
+    monthlySalesData.forEach(([month, total]) => {
+        const [year, m] = month.split('-');
+        const monthName = new Date(year, m - 1).toLocaleString('my-MM', { month: 'long', year: 'numeric' });
+        tableHTML += `
+            <tr>
+                <td>${monthName}</td>
+                <td class="text-end fw-bold">${total.toLocaleString()} ကျပ်</td>
+            </tr>
+        `;
+    });
+    tableHTML += `</tbody></table>`;
+    tableContainer.innerHTML = tableHTML;
+}
+
+function drawSalesOverTimeChart(monthlySalesData) {
     const salesOverTimeCtx = document.getElementById('salesOverTimeChart').getContext('2d');
     
-    // Using a try...catch block to prevent the entire app from crashing if the chart fails
-    try {
-        const salesByMonth = salesData.reduce((acc, sale) => {
-            // Ensure sale.date is not null or undefined before processing
-            if (sale.date) {
-                const month = sale.date.substring(0, 7);
-                if (!acc[month]) acc[month] = 0;
-                acc[month] += (sale.totalPrice || 0);
-            }
-            return acc;
-        }, {});
+    const sortedData = monthlySalesData.slice().reverse(); // re-sort ascending for chart
+    const lineChartLabels = sortedData.map(([month, total]) => {
+        const [year, m] = month.split('-');
+        return new Date(year, m - 1).toLocaleString('my-MM', { month: 'short', year: 'numeric' });
+    });
+    const lineChartData = sortedData.map(([month, total]) => total);
+    
+    if(window.salesLineChart) window.salesLineChart.destroy();
 
-        const sortedMonths = Object.keys(salesByMonth).sort();
-        const lineChartLabels = sortedMonths.map(month => {
-            const [year, m] = month.split('-');
-            return new Date(year, m - 1).toLocaleString('my-MM', { month: 'short', year: 'numeric' });
-        });
-        const lineChartData = sortedMonths.map(month => salesByMonth[month]);
-        
-        // Clear any previous chart instance to prevent memory leaks
-        if(window.salesLineChart) {
-            window.salesLineChart.destroy();
+    window.salesLineChart = new Chart(salesOverTimeCtx, {
+        type: 'line',
+        data: {
+            labels: lineChartLabels,
+            datasets: [{
+                label: 'ရောင်းရငွေ',
+                data: lineChartData,
+                borderColor: 'var(--brand-primary)',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
         }
-
-        window.salesLineChart = new Chart(salesOverTimeCtx, {
-            type: 'line',
-            data: {
-                labels: lineChartLabels,
-                datasets: [{
-                    label: 'ရောင်းရငွေ',
-                    data: lineChartData,
-                    borderColor: 'var(--brand-primary)',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    } catch (chartError) {
-        console.error("Failed to draw Sales Over Time chart:", chartError);
-        // Optionally, display a user-friendly message on the canvas
-        salesOverTimeCtx.font = "16px Inter";
-        salesOverTimeCtx.fillStyle = "var(--text-secondary)";
-        salesOverTimeCtx.textAlign = "center";
-        salesOverTime-Ctx.fillText("Chart ကို ပြသရာတွင် အမှားအယွင်းဖြစ်နေပါသည်။", salesOverTimeCtx.canvas.width / 2, 50);
-    }
+    });
 }
 
 // --- Run the main function when the page content is ready ---
