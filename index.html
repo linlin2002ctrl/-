@@ -60,20 +60,9 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Data Management Section -->
-        <div class="card">
-            <div class="card-body text-center">
-                 <h5 class="card-title mb-3">ဒေတာ စီမံခန့်ခွဲမှု</h5>
-                 <p class="text-muted small">သင့်ဖုန်း/ကွန်ပျူတာပြောင်းသုံးလျှင် ဒေတာမပျောက်စေရန် Backup လုပ်ထားနိုင်ပါသည်။</p>
-                 <button class="btn btn-success" id="export-data-btn">Export Data (Backup လုပ်ရန်)</button>
-                 <button class="btn btn-warning" id="import-data-btn">Import Data (Restore လုပ်ရန်)</button>
-                 <input type="file" id="import-file-input" accept=".json" style="display: none;">
-            </div>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="dashboard.js"></script>
+    <script type="module" src="dashboard.js"></script> <!-- type="module" ထည့်သွင်းထားသည် -->
 </body>
 </html>
