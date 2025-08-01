@@ -34,6 +34,8 @@
                             <th class="text-center sortable" data-sort="date">ရက်စွဲ</th>
                             <th class="sortable" data-sort="customer">ဝယ်သူအမည်</th>
                             <th>ပစ္စည်း</th>
+                            <!-- NEW: Quantity Column Header -->
+                            <th class="text-center sortable" data-sort="quantity">အရေအတွက်</th>
                             <th class="text-end sortable" data-sort="totalPrice">ကျသင့်ငွေ (ကျပ်)</th>
                             <th class="text-center">Action</th>
                         </tr>
@@ -41,8 +43,10 @@
                     <tbody id="sales-list"></tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="4" class="text-end">စုစုပေါင်း ရရန်ငွေ:</td>
-                            <td id="total-amount" class="text-end">0 ကျပ်</td>
+                            <!-- Adjusted colspan for the new column -->
+                            <td colspan="4" class="text-end fw-bold">စုစုပေါင်း ရရန်ငွေ:</td>
+                            <td id="total-amount" class="text-end fw-bold">0 ကျပ်</td>
+                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
