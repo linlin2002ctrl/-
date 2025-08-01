@@ -1,4 +1,12 @@
-document.addEventListener('DOMContentLoaded', () => {
+import { supabase } from './supabase-client.js';
+
+// Check if user is logged in
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+    window.location.href = '/auth.html';
+}
+
+// ... the rest of the existing code ...document.addEventListener('DOMContentLoaded', () => {
     const customerNameTitle = document.getElementById('customer-name-title');
     const customerSalesList = document.getElementById('customer-sales-list');
     const customerTotalAmountEl = document.getElementById('customer-total-amount');
