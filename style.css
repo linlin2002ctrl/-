@@ -93,4 +93,82 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--brand-primary-hover);
   border-color: var(--brand-primary-hover);
 }
-/* ... other component styles ... */
+/* ... other component styles ... *//* ================================================== */
+/*             NEW: Auth Page Styles                  */
+/* ================================================== */
+
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-background-shape {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 50%;
+  background: radial-gradient(circle, rgba(138, 92, 254, 0.15) 0%, rgba(138, 92, 254, 0) 60%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.auth-form-container {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  background: var(--neutral-card);
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.auth-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.auth-subtitle .toggle-link {
+  color: var(--brand-primary);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.auth-subtitle .toggle-link:hover {
+  text-decoration: underline;
+}
+
+.auth-form .form-control {
+  background-color: var(--neutral-bg);
+  border: 1px solid var(--neutral-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  height: 56px; /* Taller inputs */
+}
+
+.auth-btn {
+  background-color: #8A5CFE; /* Softer Purple from design */
+  border-color: #8A5CFE;
+  color: var(--text-light);
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.auth-btn:hover {
+    background-color: #7C3AED;
+    border-color: #7C3AED;
+}
