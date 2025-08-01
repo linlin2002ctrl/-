@@ -14,7 +14,7 @@
 <body>
     <div class="container mt-5" style="max-width: 600px;">
         <h1 class="text-center mb-4">ကျွန်ုပ်၏ အရောင်းမှတ်တမ်း</h1>
-        <div class="card p-4">
+        <div class="card p-4 shadow-sm">
             <h2 class="text-center mb-4">စာရင်းသစ်ထည့်သွင်းရန်</h2>
             <form id="sale-form">
                 <div class="mb-3">
@@ -25,9 +25,15 @@
                     <label for="product-name" class="form-label">ပစ္စည်းအမည်</label>
                     <input type="text" class="form-control" id="product-name" placeholder="ဥပမာ - ရေမွှေး" required>
                 </div>
-                <div class="mb-3">
-                    <label for="price" class="form-label">ကျသင့်ငွေ (ကျပ်)</label>
-                    <input type="number" class="form-control" id="price" placeholder="ဥပမာ - 25000" required>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="quantity" class="form-label">အရေအတွက်</label>
+                        <input type="number" class="form-control" id="quantity" value="1" min="1" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="unit-price" class="form-label">နှုန်း (တစ်လုံးဈေး)</label>
+                        <input type="number" class="form-control" id="unit-price" placeholder="ဥပမာ - 25000" required>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="sale-date" class="form-label">ရက်စွဲ</label>
