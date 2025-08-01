@@ -1,11 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     const allSales = JSON.parse(localStorage.getItem('sales')) || [];
 
-    // 1. Key Metrics တွေကို حساب کردن
+    // 1. Key Metrics တွေကို တွက်ချက်ခြင်း
     const totalRevenueEl = document.getElementById('total-revenue');
     const totalSalesCountEl = document.getElementById('total-sales-count');
 
-    const totalRevenue = allSales.reduce((sum, sale) => sum + sale.totalPrice, 0);
+    // === အရေးကြီးသော အပြောင်းအလဲ ===
+    // sale object မှာ totalPrice မပါခဲ့ရင် (data အဟောင်းဖြစ်ခဲ့ရင်) price ကို ယူသုံးပါမယ်။
+    const totalRevenue = allSales.reduce((sum, sale) => {
+        const revenueToAdd = sale.totalPrice !== undefined ? sale.totalPrice : sale.price;
+        return sum + (revenueToAdd || 0);
+    }, 0);
+    // =============================
+
     const totalSalesCount = allSales.length;
 
     totalRevenueEl.textContent = totalRevenue.toLocaleString();
@@ -13,11 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Line Chart (လအလိုက် ရောင်းအား) အတွက် Data ပြင်ဆင်ခြင်း
     const salesByMonth = allSales.reduce((acc, sale) => {
-        const month = sale.date.substring(0, 7); // '2025-01'
+        const month = sale.date.substring(0, 7);
         if (!acc[month]) {
             acc[month] = 0;
         }
-        acc[month] += sale.totalPrice;
+        // ဒီနေရာမှာလည်း အချက်အလက်အဟောင်း/အသစ်အတွက် ပြင်ဆင်ပေးပါမယ်။
+        const revenueToAdd = sale.totalPrice !== undefined ? sale.totalPrice : sale.price;
+        acc[month] += (revenueToAdd || 0);
         return acc;
     }, {});
 
@@ -51,7 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!acc[productName]) {
             acc[productName] = 0;
         }
-        acc[productName] += sale.totalPrice;
+        // ဒီနေရာမှာလည်း အချက်အလက်အဟောင်း/အသစ်အတွက် ပြင်ဆင်ပေးပါမယ်။
+        const revenueToAdd = sale.totalPrice !== undefined ? sale.totalPrice : sale.price;
+        acc[productName] += (revenueToAdd || 0);
         return acc;
     }, {});
 
