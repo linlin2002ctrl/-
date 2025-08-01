@@ -13,8 +13,8 @@ let sortState = { column: 'date', direction: 'desc' }; // Default sort order
 
 // --- Main function to fetch data and initialize the page ---
 async function initializePage() {
-    const { data: user, error: userError } = await supabase.auth.getUser();
-    if (!user.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
         window.location.href = '/auth.html';
         return;
     }
@@ -30,16 +30,15 @@ async function fetchAllSales() {
         return;
     }
     allSales = data;
-    populateMonths(); // <-- The missing function call
+    populateMonths(); // Populate months dropdown
     renderSales();    // Render the data
 }
 
-// --- Function to populate the month filter dropdown --- (The missing function)
+// --- Function to populate the month filter dropdown ---
 function populateMonths() {
     const months = [...new Set(allSales.map(sale => sale.date.substring(0, 7)))];
     months.sort().reverse();
     
-    // Keep the current selection if it still exists
     const currentSelection = monthFilter.value;
     
     monthFilter.innerHTML = '<option value="all">လအားလုံး</option>';
@@ -63,21 +62,14 @@ function renderSales() {
     const selectedMonth = monthFilter.value;
     const searchTerm = searchInput.value.toLowerCase();
 
-    // 1. Filter by Month
+    // 1. Filter Data
     let filteredSales = allSales.filter(sale => {
-        if (selectedMonth === 'all') return true;
-        return sale.date.substring(0, 7) === selectedMonth;
+        const inMonth = selectedMonth === 'all' || sale.date.substring(0, 7) === selectedMonth;
+        const inSearch = !searchTerm || sale.customer.toLowerCase().includes(searchTerm) || sale.product.toLowerCase().includes(searchTerm);
+        return inMonth && inSearch;
     });
 
-    // 2. Filter by Search Term
-    if (searchTerm) {
-        filteredSales = filteredSales.filter(sale => 
-            sale.customer.toLowerCase().includes(searchTerm) || 
-            sale.product.toLowerCase().includes(searchTerm)
-        );
-    }
-
-    // 3. Sort Data
+    // 2. Sort Data
     filteredSales.sort((a, b) => {
         const valA = a[sortState.column];
         const valB = b[sortState.column];
@@ -90,16 +82,17 @@ function renderSales() {
         return (valA - valB) * direction;
     });
     
-    // Update sort indicators in table headers
+    // 3. Update sort indicators in table headers
     document.querySelectorAll('.sortable').forEach(header => {
+        let currentText = header.textContent.replace(/ (↑|↓)$/, '');
         if (header.dataset.sort === sortState.column) {
-            header.innerHTML = `${header.textContent.replace(/ (↑|↓)$/, '')} ${sortState.direction === 'asc' ? '↑' : '↓'}`;
+            header.innerHTML = `${currentText} ${sortState.direction === 'asc' ? '↑' : '↓'}`;
         } else {
-            header.innerHTML = header.textContent.replace(/ (↑|↓)$/, '');
+            header.innerHTML = currentText;
         }
     });
 
-    // Check for Empty State
+    // 4. Check for Empty State
     if (filteredSales.length === 0) {
         tableContainer.style.display = 'none';
         emptyState.style.display = 'block';
@@ -108,7 +101,7 @@ function renderSales() {
         emptyState.style.display = 'none';
     }
 
-    // 4. Render Table Rows
+    // 5. Render Table Rows
     salesList.innerHTML = '';
     filteredSales.forEach(sale => {
         grandTotal += sale.totalPrice;
@@ -130,26 +123,26 @@ function renderSales() {
 }
     
 // --- Function to add listeners to delete buttons ---
-async function addDeleteListeners() {
+function addDeleteListeners() {
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', async (e) => {
-            const idToDelete = parseInt(e.target.getAttribute('data-id'));
+            const idToDelete = parseInt(e.currentTarget.getAttribute('data-id'));
             const confirmed = confirm('ဤစာရင်းကို ဖျက်မည်မှာ သေချာပါသလား?');
             if(confirmed){
                 const { error } = await supabase.from('sales').delete().eq('sale_id', idToDelete);
                 if(error){
                     alert('Error deleting sale: ' + error.message);
                 } else {
-                    // Re-fetch all data to ensure consistency
-                    await fetchAllSales();
+                    await fetchAllSales(); // Re-fetch all data to ensure consistency
                 }
             }
         });
     });
 }
 
-// --- Event Listeners for search and sort ---
+// --- Event Listeners for search, sort and filter ---
 searchInput.addEventListener('input', renderSales);
+monthFilter.addEventListener('change', renderSales);
 
 document.querySelectorAll('.sortable').forEach(header => {
     header.addEventListener('click', () => {
@@ -163,8 +156,6 @@ document.querySelectorAll('.sortable').forEach(header => {
         renderSales();
     });
 });
-
-monthFilter.addEventListener('change', renderSales);
 
 // --- Run the main function when the page is ready ---
 document.addEventListener('DOMContentLoaded', initializePage);
