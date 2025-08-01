@@ -1,70 +1,92 @@
-/* Google Font (Padauk) */
-@import url('https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap');
+/* --- Google Fonts (Inter) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Color Palette based on 60-30-10 Rule */
+/* --- Brand Color Palette --- */
 :root {
-    --primary-color: #0d6efd; /* Blue: Trust, Stability (60%) */
-    --secondary-color: #f8f9fa; /* Light Gray: Background (30%) */
-    --accent-color-success: #198754; /* Green: Growth, Success (10%) */
-    --accent-color-danger: #dc3545; /* Red: Urgency, Warning */
-    --text-color-dark: #212529;
-    --text-color-light: #6c757d;
-    --card-bg: #ffffff;
-    --border-color: #dee2e6;
+  --brand-primary: #2563EB; /* Professional Blue */
+  --brand-primary-hover: #1D4ED8; /* Darker shade for hover */
+  --brand-success: #10B981; /* Calmer Green */
+  --brand-danger: #EF4444; /* Softer Red */
+  --brand-warning: #F59E0B; /* Richer Yellow */
+  
+  --neutral-bg: #F9FAFB;      /* Off-white background */
+  --neutral-card: #FFFFFF;     /* White for cards */
+  --neutral-border: #E5E7EB;  /* Light gray for borders */
+  
+  --text-primary: #1F2937;    /* Near-black for main text */
+  --text-secondary: #6B7280; /* Medium gray for secondary text */
+  --text-light: #FFFFFF;
 }
 
+/* --- Global Styles --- */
 body {
-    font-family: 'Padauk', sans-serif;
-    background-color: var(--secondary-color);
-    color: var(--text-color-dark);
+  font-family: 'Inter', sans-serif;
+  background-color: var(--neutral-bg);
+  color: var(--text-primary);
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+/* --- Overriding Bootstrap --- */
 .card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem; /* Softer corners */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background-color: var(--neutral-card);
+  border: 1px solid var(--neutral-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem; /* More whitespace (p-4) */
+}
+
+.btn {
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.2rem;
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--text-light);
+}
+.btn-primary:hover {
+  background-color: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
 }
 
 .btn-danger {
-    background-color: var(--accent-color-danger);
-    border-color: var(--accent-color-danger);
+  background-color: var(--brand-danger);
+  border-color: var(--brand-danger);
+  color: var(--text-light);
 }
 
-/* Dashboard Specific Styles */
-.card-metric .value {
+.form-control, .form-select {
+    border-color: var(--neutral-border);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+}
+
+.table {
+    border-color: var(--neutral-border);
+}
+
+/* --- Custom Components --- */
+.stat-card {
+    text-align: center;
+}
+.stat-card .stat-value {
     font-size: 2.25rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--brand-primary);
+}
+.stat-card .stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
-.card-metric .label {
-    font-size: 1rem;
-    color: var(--text-color-light);
-    font-weight: 400;
-}
-
-/* Touch-friendly adjustments for smaller screens */
-@media (max-width: 576px) {
-    .btn-lg {
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-    }
-    h1 {
-        font-size: 1.75rem;
-    }
-}
-
-tfoot { 
-    font-weight: bold; 
-    font-size: 1.1em; 
-}
-
-#total-amount { 
-    color: var(--accent-color-danger);
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.7em;
 }
