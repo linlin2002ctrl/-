@@ -1,170 +1,71 @@
-import { supabase } from './supabase-client.js';
-
-// --- Global variables ---
-const salesList = document.getElementById('sales-list');
-const totalAmountEl = document.getElementById('total-amount');
-const monthFilter = document.getElementById('month-filter');
-const searchInput = document.getElementById('search-input');
-const tableContainer = document.getElementById('table-container');
-const emptyState = document.getElementById('empty-state');
-
-let allSales = []; // This will store all sales data fetched from Supabase
-let sortState = { column: 'date', direction: 'desc' }; // Default sort order
-
-// --- Main function to fetch data and initialize the page ---
-async function initializePage() {
-    const { data: user, error: userError } = await supabase.auth.getUser();
-    if (!user.user) {
-        window.location.href = '/auth.html';
-        return;
-    }
-    await fetchAllSales();
-}
-
-async function fetchAllSales() {
-    const { data, error } = await supabase.from('sales').select('*');
-    if (error) {
-        console.error('Error fetching records:', error);
-        emptyState.innerHTML = '<h4>Error loading data</h4>';
-        emptyState.style.display = 'block';
-        return;
-    }
-    allSales = data;
-    populateMonths(); // <-- The missing function call
-    renderSales();    // Render the data
-}
-
-// --- Function to populate the month filter dropdown --- (The missing function)
-function populateMonths() {
-    const months = [...new Set(allSales.map(sale => sale.date.substring(0, 7)))];
-    months.sort().reverse();
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>a-yone-hmat-su</title>
     
-    // Keep the current selection if it still exists
-    const currentSelection = monthFilter.value;
+    <!-- App Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- CSS Links -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                 <h2 class="mb-0 h4">လချုပ်စာရင်း</h2>
+                 <a href="index.html" class="btn btn-secondary">Dashboard သို့</a>
+            </div>
+           
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="search-input" class="form-label">ရှာဖွေရန်:</label>
+                    <input type="search" id="search-input" class="form-control" placeholder="ဝယ်သူ/ပစ္စည်းအမည်ဖြင့် ရှာရန်...">
+                </div>
+                <div class="col-md-6">
+                    <label for="month-filter" class="form-label">လ အလိုက် စာရင်းစစ်ရန်:</label>
+                    <select id="month-filter" class="form-select"></select>
+                </div>
+            </div>
     
-    monthFilter.innerHTML = '<option value="all">လအားလုံး</option>';
-    months.forEach(month => {
-        const option = document.createElement('option');
-        option.value = month;
-        const [year, m] = month.split('-');
-        const date = new Date(year, m - 1);
-        option.textContent = date.toLocaleString('my-MM', { month: 'long', year: 'numeric' });
-        monthFilter.appendChild(option);
-    });
-
-    if (months.includes(currentSelection)) {
-        monthFilter.value = currentSelection;
-    }
-}
-
-// --- Function to render the sales data into the table ---
-function renderSales() {
-    let grandTotal = 0;
-    const selectedMonth = monthFilter.value;
-    const searchTerm = searchInput.value.toLowerCase();
-
-    // 1. Filter by Month
-    let filteredSales = allSales.filter(sale => {
-        if (selectedMonth === 'all') return true;
-        return sale.date.substring(0, 7) === selectedMonth;
-    });
-
-    // 2. Filter by Search Term
-    if (searchTerm) {
-        filteredSales = filteredSales.filter(sale => 
-            sale.customer.toLowerCase().includes(searchTerm) || 
-            sale.product.toLowerCase().includes(searchTerm)
-        );
-    }
-
-    // 3. Sort Data
-    filteredSales.sort((a, b) => {
-        const valA = a[sortState.column];
-        const valB = b[sortState.column];
-        const direction = sortState.direction === 'asc' ? 1 : -1;
-        if (valA === null) return 1 * direction;
-        if (valB === null) return -1 * direction;
-        if (typeof valA === 'string') {
-            return valA.localeCompare(valB) * direction;
-        }
-        return (valA - valB) * direction;
-    });
-    
-    // Update sort indicators in table headers
-    document.querySelectorAll('.sortable').forEach(header => {
-        if (header.dataset.sort === sortState.column) {
-            header.innerHTML = `${header.textContent.replace(/ (↑|↓)$/, '')} ${sortState.direction === 'asc' ? '↑' : '↓'}`;
-        } else {
-            header.innerHTML = header.textContent.replace(/ (↑|↓)$/, '');
-        }
-    });
-
-    // Check for Empty State
-    if (filteredSales.length === 0) {
-        tableContainer.style.display = 'none';
-        emptyState.style.display = 'block';
-    } else {
-        tableContainer.style.display = 'block';
-        emptyState.style.display = 'none';
-    }
-
-    // 4. Render Table Rows
-    salesList.innerHTML = '';
-    filteredSales.forEach(sale => {
-        grandTotal += sale.totalPrice;
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td class="text-center">${sale.date}</td>
-            <td><a href="customer-details.html?name=${encodeURIComponent(sale.customer)}">${sale.customer}</a></td>
-            <td>${sale.product}</td>
-            <td class="text-center">${sale.quantity.toLocaleString()}</td>
-            <td class="text-end">${sale.unitPrice.toLocaleString()}</td>
-            <td class="text-end"><strong>${sale.totalPrice.toLocaleString()}</strong></td>
-            <td class="text-center"><button class="btn btn-danger btn-sm delete-btn" data-id="${sale.sale_id}">ဖျက်ရန်</button></td>
-        `;
-        salesList.appendChild(row);
-    });
-
-    totalAmountEl.textContent = `${grandTotal.toLocaleString()} ကျပ်`;
-    addDeleteListeners();
-}
-    
-// --- Function to add listeners to delete buttons ---
-async function addDeleteListeners() {
-    document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', async (e) => {
-            const idToDelete = parseInt(e.target.getAttribute('data-id'));
-            const confirmed = confirm('ဤစာရင်းကို ဖျက်မည်မှာ သေချာပါသလား?');
-            if(confirmed){
-                const { error } = await supabase.from('sales').delete().eq('sale_id', idToDelete);
-                if(error){
-                    alert('Error deleting sale: ' + error.message);
-                } else {
-                    // Re-fetch all data to ensure consistency
-                    await fetchAllSales();
-                }
-            }
-        });
-    });
-}
-
-// --- Event Listeners for search and sort ---
-searchInput.addEventListener('input', renderSales);
-
-document.querySelectorAll('.sortable').forEach(header => {
-    header.addEventListener('click', () => {
-        const column = header.dataset.sort;
-        if (sortState.column === column) {
-            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-            sortState.column = column;
-            sortState.direction = 'asc';
-        }
-        renderSales();
-    });
-});
-
-monthFilter.addEventListener('change', renderSales);
-
-// --- Run the main function when the page is ready ---
-document.addEventListener('DOMContentLoaded', initializePage);
+            <div id="table-container" class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center sortable" data-sort="date">ရက်စွဲ</th>
+                            <th class="sortable" data-sort="customer">ဝယ်သူအမည်</th>
+                            <th>ပစ္စည်း</th>
+                            <th class="text-center">အရေအတွက်</th>
+                            <th class="text-end sortable" data-sort="unitPrice">နှုန်း</th>
+                            <th class="text-end sortable" data-sort="totalPrice">ကျသင့်ငွေ (ကျပ်)</th>
+                            <th class="text-center">ဖျက်ရန်</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-list"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5" class="text-end">စုစုပေါင်း ရရန်ငွေ:</td>
+                            <td id="total-amount" class="text-end">0 ကျပ်</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-5" style="display: none;">
+                <h4>မှတ်တမ်းများ မရှိသေးပါ</h4>
+                <p class="text-muted">သို့မဟုတ် သင်ရှာဖွေသော အချက်အလက်နှင့် ကိုက်ညီမှုမရှိပါ။</p>
+                <a href="add-sale.html" class="btn btn-primary mt-2">ပထမဆုံး စာရင်းသွင်းရန်</a>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="records.js"></script>
+</body>
+</html>
