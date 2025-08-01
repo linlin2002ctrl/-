@@ -1,45 +1,43 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const saleForm = document.getElementById('sale-form');
-    const saleDateInput = document.getElementById('sale-date');
-    const customerList = document.getElementById('customer-list');
-    const productList = document.getElementById('product-list');
-    const toastLiveExample = document.getElementById('liveToast');
-    const toast = new bootstrap.Toast(toastLiveExample);
+import { supabase } from './supabase-client.js';
 
-    // Initial load
-    populateDatalists();
-    saleDateInput.value = new Date().toISOString().split('T')[0];
+const saleForm = document.getElementById('sale-form');
+const saleDateInput = document.getElementById('sale-date');
+// ... datalist variables ...
 
-    function populateDatalists() {
-        const sales = JSON.parse(localStorage.getItem('sales')) || [];
-        const uniqueCustomers = [...new Set(sales.map(sale => sale.customer))];
-        const uniqueProducts = [...new Set(sales.map(sale => sale.product))];
+// Check if user is logged in
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+    window.location.href = '/auth.html';
+}
 
-        customerList.innerHTML = uniqueCustomers.map(c => `<option value="${c}">`).join('');
-        productList.innerHTML = uniqueProducts.map(p => `<option value="${p}">`).join('');
-    }
+// ... populateDatalists function (no change) ...
 
-    saleForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const quantity = parseInt(document.getElementById('quantity').value);
-        const unitPrice = parseFloat(document.getElementById('unit-price').value);
-        const newSale = {
-            id: Date.now(),
-            customer: document.getElementById('customer-name').value.trim(),
-            product: document.getElementById('product-name').value.trim(),
-            quantity,
-            unitPrice,
-            totalPrice: quantity * unitPrice,
-            date: saleDateInput.value,
-        };
-        const sales = JSON.parse(localStorage.getItem('sales')) || [];
-        sales.push(newSale);
-        localStorage.setItem('sales', JSON.stringify(sales));
-        
+saleForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const quantity = parseInt(document.getElementById('quantity').value);
+    const unitPrice = parseFloat(document.getElementById('unit-price').value);
+    
+    const newSale = {
+        sale_id: Date.now(),
+        customer: document.getElementById('customer-name').value.trim(),
+        product: document.getElementById('product-name').value.trim(),
+        quantity,
+        unitPrice,
+        totalPrice: quantity * unitPrice,
+        date: saleDateInput.value,
+        user_id: user.id // Logged in user's ID
+    };
+
+    const { error } = await supabase.from('sales').insert(newSale);
+
+    if (error) {
+        alert('Error saving sale: ' + error.message);
+    } else {
+        alert('စာရင်းသွင်းပြီးပါပြီ။');
         saleForm.reset();
         saleDateInput.value = new Date().toISOString().split('T')[0];
-        
-        toast.show(); // Show toast notification
-        populateDatalists(); // Update datalists with new entry
-    });
+        // populateDatalists();
+    }
 });
+
+// ... DOMContentLoaded event listener ...
