@@ -1,22 +1,31 @@
-// At the top of main.js, after declaring variables
-const quantityInput = document.getElementById('quantity');
-const unitPriceInput = document.getElementById('unit-price');
-const totalPriceDisplay = document.getElementById('total-price-display');
+import { supabase } from './supabase-client.js';
 
-function calculateTotal() {
-    const quantity = parseInt(quantityInput.value) || 0;
-    const unitPrice = parseFloat(unitPriceInput.value) || 0;
-    const total = quantity * unitPrice;
-    totalPriceDisplay.textContent = `${total.toLocaleString()} ကျပ်`;
-}
-
-// Add event listeners for auto-calculation
-quantityInput.addEventListener('input', calculateTotal);
-unitPriceInput.addEventListener('input', calculateTotal);
-
-// --- The rest of your main.js code (like the form submit listener) goes here ---
-// --- Ensure you also call calculateTotal() when the page loads ---
 document.addEventListener('DOMContentLoaded', () => {
-    // ... existing DOMContentLoaded code ...
-    calculateTotal(); 
+    // ... variable declarations (no change) ...
+    const toastLiveExample = document.getElementById('liveToast');
+    const toast = new bootstrap.Toast(toastLiveExample);
+
+    // ... populateDatalists and other functions (no change) ...
+
+    saleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        // ... newSale object creation (no change) ...
+
+        const { error } = await supabase.from('sales').insert(newSale);
+
+        if (error) {
+            // A more elegant error toast could be implemented here later
+            alert('Error saving sale: ' + error.message);
+        } else {
+            saleForm.reset();
+            // ... reset date and other logic ...
+            
+            // --- Zen: Use toast for unobtrusive feedback ---
+            toast.show(); 
+            
+            populateDatalists();
+        }
+    });
+
+    // ... other event listeners and initial calls ...
 });
