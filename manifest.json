@@ -1,6 +1,6 @@
 {
-    "name": "a-yone-hmat-su",
-    "short_name": "Sales App",
+    "short_name": "a-yone-hmat-su",
+    "name": "a-yone-hmat-su Sales Tracker",
     "description": "A simple sales tracker application.",
     "start_url": "/index.html",
     "display": "standalone",
